@@ -1,0 +1,11 @@
+{% extends "index.html" %}
+
+ {% block pageTitle %}EcoFornecedor{% endblock  %}
+ {% block contentTitle%}Cadastrar Produtos{% endblock %}
+ {% block content %}
+    <form action="/cadastrarProduto/sendForm/" method="post" enctype="multipart/form-data" class="produtoForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="buyButton" style="width: 300px;">Salvar</button>
+    </form>
+ {% endblock %}

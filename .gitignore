@@ -1,0 +1,93 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.env
+*.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+db.sqlite3
+*.log
+media/
+staticfiles/
+
+# Migrations
+**/migrations/
+
+# Virtual environment
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# pyenv
+.python-version
+
+# Environment variables
+.env
+*.env
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+*.log
+*.pot
+*.mo
+
+# Cache
+*.cache
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Testing
+.coverage
+.tox
+.pytest_cache/
+
+# Editor specific
+*.sublime-project
+*.sublime-workspace
+.idea/
+.vscode/
+*.code-workspace
+*.project
+*.pydevproject

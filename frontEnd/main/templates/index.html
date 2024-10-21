@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block pageTitle %}EcoComprador{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bannerBg">
+        <nav>
+            <ul>
+                <li><a href="/"><img src="{% static "images/logo.png" %}" class = "logo" alt="logo img">   <span style="position: relative; top:-15px;"s>ECO SERTÃO</span></a></li>
+                <li><a href="/quemSomos/">QUEM SOMOS?</a></li>
+                <li><a href="/cadastrarUsuario/">CADASTRO</a></li> <!--preciso criar um template para definir se é fornecedor ou comprador-->
+                <li><a href="/login/">LOGIN</a></li>
+            </ul>
+        </nav>
+        <div class="contentContainer">
+            <div class="contentTitle">
+                <h1>{% block contentTitle %}Lista de Produtos{% endblock %}</h1>
+            </div>
+            <div class="content">
+                {% block content %}
+                    {% if is_empty %}
+                        <h3 class="msgERRO">Nenhum produto disponível.</h3>
+                    {% else %}
+                        {% for produto in produtos %}
+                            <div class="productContainer">
+                                <div class="productContent">
+                                    <ul>
+                                        <li>
+                                            <div class="produtoNome"><h3>Nome => {{ produto.nome }}</h3></div>
+                                        </li>
+                                        <li>
+                                            <div class="produtoMarca"><h3>Marca => {{ produto.marca }}</h3></div>
+                                        </li>
+                                        <li>
+                                            <div class="produtoPreco"><h3>Preço => R${{ produto.preco }}</h3></div>
+                                        </li>
+                                        <li>
+                                            <div class="produtoDataValid"><h3>Validade =>  {{ produto.dataValid }}</h3></div>
+                                        </li>
+                                        <li>
+                                            <div class="produtoFrete"><h3>Frete =>  {{ produto.frete }}</h3></div>
+                                        </li>
+                                        <button class="buyButton">Compre Agora</button>
+                                    </ul>
+                                    
+                                    <div class="productImageContainer">
+                                        {% if produto.imagem %}
+                                            <img src="{{ imageUrl }}{{ produto.imagem }}" alt="{{ produto.name }}" class="productImage">
+                                        {% else %}
+                                            <p>No image available</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="flex-menu">
+                        <a href="{% url 'dashboard' %}">Retornar ao Dashboard.</a>
+                    </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

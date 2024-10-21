@@ -1,0 +1,10 @@
+{% extends "index.html" %}
+
+ {% block pageTitle %}EcoSertão{% endblock  %}
+ {% block contentTitle%}ERRO{% endblock %}
+ {% block content %}
+    <h1>ERRO</h1>
+    <h2>Ops, parece que aconteceu um erro com sua requisição <br>Contate o suporte técnico.</h2>
+    <a href="{% url 'login' %}">Retorne ao Login</a>
+
+ {% endblock%}

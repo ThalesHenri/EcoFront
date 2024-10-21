@@ -1,0 +1,11 @@
+{% extends "index.html" %}
+
+ {% block pageTitle %}EcoUsuario{% endblock  %}
+ {% block contentTitle%}Cadastrar Usuario{% endblock %}
+ {% block content %}
+    <form action="/cadastrarUsuario/sendForm/" method="post" class="produtoForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="buyButton" style="width: 300px;">Salvar</button>
+    </form>
+ {% endblock %}

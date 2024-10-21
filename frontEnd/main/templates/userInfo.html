@@ -1,0 +1,27 @@
+{% extends "index.html" %}
+
+ {% block pageTitle %}EcoSertão{% endblock  %}
+ {% block contentTitle%}Informações do Usuário{% endblock %}
+ {% block content %}
+ {% if userInfo %}
+    <div class="dashboard-container">
+        <h1>Bem vindo, {{ userInfo.nome }}</h1>
+    
+        <div class="user-info">
+            <p><strong>CNPJ:</strong> {{ userInfo.cnpj }}</p>
+            <p><strong>RESPONSÁVEL:</strong> {{ userInfo.responsavel}}</p>
+
+        </div>
+    
+        <div class="flex-menu">
+            <a href="{% url 'cadastrarProduto' %}">Registrar um produto</a>
+            <a href="{% url 'mostrarProdutos' %}">Ver produtos Registrados</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>    
+    </div>
+    
+ {% else %}
+     <p>No user info available.</p>
+ {% endif %}
+ <a href="{% url 'logout' %}">Log out</a>
+ {% endblock%}

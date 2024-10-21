@@ -1,0 +1,9 @@
+{% extends "index.html" %}
+{% block pageTitle %}Sucesso{% endblock  %}
+{% block contentTitle%}Sucesso{% endblock %}
+{% block content %}
+<h1>Formulário enviado com sucesso!</h1>
+<a href="{% url 'login' %}">Retorne ao Login </a>
+<br>
+<a href="{% url 'dashboard' %}">Se ja está logado retorne ao dashboard. </a>
+{% endblock %}

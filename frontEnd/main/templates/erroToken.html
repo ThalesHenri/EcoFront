@@ -1,0 +1,10 @@
+{% extends "index.html" %}
+
+ {% block pageTitle %}EcoSertão{% endblock  %}
+ {% block contentTitle%}ERRO{% endblock %}
+ {% block content %}
+    <h1> Acesso negado</h1>
+    <h2>Precisa estar logado para acessar essa pagina</h2>
+    <a href="{% url 'login' %}">Retorne ao Login</a>
+
+ {% endblock%}

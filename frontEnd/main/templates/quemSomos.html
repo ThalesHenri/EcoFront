@@ -1,0 +1,54 @@
+{% extends "index.html" %}
+{% load static %}
+
+ {% block pageTitle %}EcoSertão{% endblock  %}
+ {% block contentTitle%}Quem Somos{% endblock %}
+ {% block content %}
+ <h1>Quem Somos?</h1>
+ <p>Bem-vindo à EcoSertão!</p>
+ <p>Na EcoSertão, acreditamos em um futuro mais sustentável e acessível. Somos uma plataforma dedicada a conectar consumidores conscientes com empresas que vendem produtos próximos à data de validade. Nosso objetivo é reduzir o desperdício de alimentos e promover um consumo mais responsável.</p>
+ 
+ <h2>Nossa Missão</h2>
+ <p>A nossa missão é simples: <strong>reduzir o desperdício, promover a sustentabilidade e oferecer produtos de qualidade a preços acessíveis</strong>. Trabalhamos incansavelmente para garantir que produtos perfeitamente bons não sejam descartados, mas sim aproveitados pelos nossos clientes.</p>
+ 
+ <h2>Como Funciona</h2>
+ <p>Na EcoSertão, facilitamos a compra de produtos que estão próximos da data de validade, oferecendo grandes descontos e a chance de contribuir para um mundo mais sustentável. Empresas parceiras listam seus produtos na nossa plataforma, e você, consumidor consciente, pode adquirir esses itens de forma fácil e rápida.</p>
+ 
+ <h2>Nossos Valores</h2>
+ <ul>
+     <li><strong>Sustentabilidade</strong>: Estamos comprometidos em minimizar o desperdício de alimentos e promover práticas de consumo responsáveis.</li>
+     <li><strong>Qualidade</strong>: Garantimos que todos os produtos listados em nossa plataforma estão em excelentes condições de consumo.</li>
+     <li><strong>Acessibilidade</strong>: Oferecemos produtos de qualidade a preços acessíveis para todos.</li>
+     <li><strong>Transparência</strong>: Mantemos um relacionamento aberto e honesto com nossos parceiros e clientes.</li>
+ </ul>
+ 
+ <h2>Junte-se a Nós</h2>
+ <p>Acreditamos que, juntos, podemos fazer a diferença. Ao escolher a EcoSertão, você está apoiando um movimento global para reduzir o desperdício de alimentos e promover um consumo mais sustentável. Venha fazer parte dessa jornada conosco!</p>
+ 
+ <h2>Contato</h2>
+ <p>Se você tiver alguma dúvida, sugestão ou quiser saber mais sobre como pode se envolver, não hesite em nos contatar. Estamos aqui para ajudar e ouvir você.</p>
+ 
+ <p>Na EcoSertão, cada compra é um passo rumo a um planeta mais saudável e consciente. Obrigado por escolher a sustentabilidade. Obrigado por escolher a EcoSertão.</p>
+ <div class="teamContainer">
+    <div class="teamCard">
+        <img src="{% static 'images/th.png' %}" alt="Foto de Integrante 1" class="teamPhoto">
+        <h3>Thales Henrique</h3>
+        <p>Especialista em Desenvolvimento Backend, com vasta experiência em Python e Django, João garante que nossas aplicações são robustas e escaláveis.</p>
+    </div>
+    <div class="teamCard">
+        <img src="{% static 'images/nano.png' %}" alt="Foto de Integrante 2" class="teamPhoto">
+        <h3>Nano Santos</h3>
+        <p>Desenvolvedora Frontend, Ana é apaixonada por design responsivo e garante que todas as nossas interfaces sejam intuitivas e acessíveis.</p>
+    </div>
+    <div class="teamCard">
+        <img src="#" alt="Foto de Integrante 3" class="teamPhoto">
+        <h3>Lucas Ferreira</h3>
+        <p>Especialista em DevOps, Lucas gerencia a infraestrutura e a automação, mantendo o sistema estável e pronto para crescer de acordo com as necessidades dos clientes.</p>
+    </div>
+    <div class="teamCard">
+        <img src="#" alt="Foto de Integrante 4" class="teamPhoto">
+        <h3>Maria Oliveira</h3>
+        <p>Engenheira de Dados, Maria é responsável por otimizar o fluxo de dados e transformar informações em insights valiosos para a empresa.</p>
+    </div>
+</div>
+ {% endblock %}
