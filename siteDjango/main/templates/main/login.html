@@ -1,0 +1,20 @@
+{% extends "main/index.html" %}
+{% block content %}
+
+<div class="loginContainer">
+    <form method="post">
+        {% csrf_token %}
+        <div class="loginBox">
+            <h2>Login</h2>
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" required>
+            <br>
+            <label for="password">Senha:</label>
+            <input type="password" name="password" id="password" required>
+            <button type="submit">Entrar</button>
+            <p>Cadastre-se como <a href="#">Vendedor</a> ou <a href="/registerComprador/">Comprador</a></p>
+        </div>
+    </form>
+</div>
+
+{% endblock content %}

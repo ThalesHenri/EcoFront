@@ -1,0 +1,40 @@
+# Arquivos e pastas do Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Ambiente virtual
+venv/
+env/
+.venv/
+.Env/
+*.env
+
+# Arquivos do Django
+db.sqlite3
+media/
+staticfiles/
+
+# Configuração local
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Cache e temporários
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.mo
+*.egg-info/
+.eggs/
+*.tmp
+
+# Arquivos de migração automáticos (opcional, se quiser ignorar)
+# */migrations/*.py
+# !*/migrations/__init__.py

@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>EcoSertão</title>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'assets/logo.png' %}" alt="EcoSertão">
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Início</a></li>
+                <li><a href="#sobre">Sobre</a></li>
+                <li><a href="#contato">Contato</a></li>
+                <li><a href="/login/" class="btn-login">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+    {% block content %}
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Bem-vindo ao <span>EcoSertão</span></h1>
+            <p>Soluções sustentáveis para o comércio alimentício, unindo inovação e preservação.</p>
+            <a href="#" class="btn-primary">Entrar na Plataforma</a>
+        </div>
+    </section>
+
+    <section id="sobre" class="sobre">
+        <h2>Sobre Nós</h2>
+        <p>Compre alimentos de qualidade com desconto e ajude a reduzir o desperdício nos pequenos comércios locais da sua cidade.</p>
+    </section>
+    {% endblock content %}
+
+    <section id="contato" class="contato">
+        <h2>Entre em Contato</h2>
+        <p>Email: contato@ecosertao.com</p>
+        <p>Telefone: (XX) XXXX-XXXX</p>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; {{ now|date:"Y" }} EcoSertão - Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>
