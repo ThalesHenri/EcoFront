@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>{% block title %}EcoSertão{% endblock %}</title>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'assets/logo.png' %}" alt="EcoSertão">
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Início</a></li>
+                {% if user.is_authenticated %}
+                    {% if user.tipo == 'Comprador' %}
+                        <li><a href="{% url 'dashboard_comprador' %}">Dashboard</a></li>
+                        <li><a href="{% url 'pacotes_list' %}">Pacotes</a></li>
+                        <li><a href="{% url 'meus_pedidos' %}">Meus Pedidos</a></li>
+                    {% elif user.tipo == 'Vendedor' %}
+                        <li><a href="{% url 'dashboard_vendedor' %}">Dashboard</a></li>
+                        <li><a href="{% url 'meus_pacotes' %}">Meus Pacotes</a></li>
+                        <li><a href="{% url 'pedidos_recebidos' %}">Pedidos</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'logout' %}">Sair ({{ user.username }})</a></li>
+                {% else %}
+                    <li><a href="#sobre">Sobre</a></li>
+                    <li><a href="#contato">Contato</a></li>
+                    <li><a href="{% url 'login' %}" class="btn-login">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    {% if not user.is_authenticated %}
+    <section id="contato" class="contato">
+        <h2>Entre em Contato</h2>
+        <p>Email: contato@ecosertao.com</p>
+        <p>Telefone: (XX) XXXX-XXXX</p>
+    </section>
+    {% endif %}
+
+    <footer class="footer">
+        <p>&copy; {{ now|date:"Y" }} EcoSertão - Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>
