@@ -38,3 +38,4 @@ staticfiles/
 # Arquivos de migração automáticos (opcional, se quiser ignorar)
 # */migrations/*.py
 # !*/migrations/__init__.py
+.env
