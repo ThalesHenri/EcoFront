@@ -5,7 +5,7 @@
 {% block content %}
 <div class="dashboard fade-in">
     <div class="dashboard-header">
-        <h1>Bem-vindo, {{ comprador.nome }}!</h1>
+        <h1>Bem-vindo, {{ compradorNome }}!</h1>
         <p>Seu painel de controle como comprador</p>
     </div>
     
@@ -27,6 +27,32 @@
             <p>Avaliações Feitas</p>
         </div>
     </div>
+
+    <div class="container mt-4">
+
+        <div class="dashboard-header">
+            <h2 class="mb-3">Estabelecimentos Cadastrados</h2>
+        </div>
+    <div class="estabelecimentos-container">
+    {% for estabelecimento in estabelecimentos %}
+    <div class="estabelecimento-card">
+        <img src="{{ estabelecimento.imagem_url|default:'https://www.infomoney.com.br/wp-content/uploads/2019/06/loja-natura-sede-sp.jpg?fit=900%2C600&quality=50&strip=all' }}" 
+             class="estabelecimento-img" alt="{{ estabelecimento.nome_empresa }}">
+        <div class="estabelecimento-body">
+            <h5 class="estabelecimento-titulo">{{ estabelecimento.nome_empresa }}</h5>
+            <p class="estabelecimento-texto">
+                {{ estabelecimento.representante }}
+            </p>
+            <a href="#" class="btn btn-primary btn-sm">
+                Ver Produtos
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+</div>
     
     <div class="cards-grid">
         <div class="card">
