@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 import requests
 from django.contrib import messages
 from django.db.models import Sum, Avg
 from .models import User, Comprador, Vendedor, Pacote, Pedido, Pagamento, Avaliacao
 import jwt
+
 
 
 API_ENDPOINT = 'http://localhost:8080/api/'  # Substitua pelo endpoint real da API
@@ -18,11 +19,21 @@ def get_user_id_from_token(token):
     try:
         # Decodifica o token sem verificar assinatura
         payload = jwt.decode(token, options={"verify_signature": False})
-        print(payload)  # ou o nome do campo que contém o ID do usuário
         return payload.get('user_id')  # ou o nome do campo no seu token
     except jwt.DecodeError:
         return None
 
+
+def get_user_type_from_token(token):
+    try:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        tipo = payload.get('tipo')
+        print(payload)
+        print(tipo)
+        return tipo  # ou o nome do campo no seu token
+    except jwt.DecodeError:
+        return None
+    
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -49,28 +60,35 @@ def login_view(request):
             refresh_token = tokens.get('refresh')
 
             if access_token:
+                 # Descobre o tipo do usuário pelo token
+                user_tipo = get_user_type_from_token(access_token)
+                
                 # Salva os tokens na sessão
                 request.session['access_token'] = access_token
                 request.session['refresh_token'] = refresh_token
                 request.session.set_expiry(3600)  # expira em 1 hora
-
-                # Descobre o tipo do usuário pelo token
-                user_id = int(get_user_id_from_token(access_token))
-                if not user_id:
-                    messages.error(request, 'Token JWT inválido ou não contém o ID do usuário.')
-                    return render(request, 'main/login.html')
-                headers = {'Authorization': f'Bearer {access_token}'}
+                request.session['user_tipo'] = user_tipo
+               
                 
                 # Verifica o tipo de usuário
-                comprador_request = requests.get(API_ENDPOINT + f'compradores/?user={user_id}/', headers=headers)
-                if comprador_request.status_code == 200:
-                    messages.success(request, 'Login realizado com sucesso!')
-                    return redirect('dashboard_comprador')
+                if user_tipo == 'comprador':
+                    user_id = get_user_id_from_token(access_token)
+                    headers = {'Authorization': f'Bearer {access_token}'}
+                    comprador_request = requests.get(API_ENDPOINT + f'compradores/?user={user_id}/', headers=headers)
+                    if comprador_request.status_code == 200:
+                        messages.success(request, 'Login realizado com sucesso!')
+                        return redirect('dashboard_comprador')
+                    
+                    messages.error(request, 'Usuário não encontrado ou tipo inválido.')
+                    return render(request, 'main/login.html')
                 
-                vendedor_request = requests.get(API_ENDPOINT + f'vendedores/?user={user_id}/', headers=headers)
-                if vendedor_request.status_code == 200:
-                    messages.success(request, 'Login realizado com sucesso!')
-                    return redirect('dashboard_vendedor')
+                elif user_tipo == 'vendedor':
+                    user_id = get_user_id_from_token(access_token)
+                    headers = {'Authorization': f'Bearer {access_token}'}
+                    vendedor_request = requests.get(API_ENDPOINT + f'vendedores/?user={user_id}/', headers=headers)
+                    if vendedor_request.status_code == 200:
+                        messages.success(request, 'Login realizado com sucesso!')
+                        return redirect('dashboard_vendedor')
                 
                 messages.error(request, 'Usuário não encontrado ou tipo inválido.')
                 return render(request, 'main/login.html')
@@ -114,25 +132,23 @@ def register_comprador(request):
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Este nome de usuário já está em uso.')
             return render(request, 'main/register_comprador.html')
-        
+        data = {
+                'nome': nome,
+                'telefone': telefone,
+                'username': username,
+                'email': email,
+                'password': password,
+                'tipo': 'Comprador'
+            }
         try:
             # Criar usuário
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                tipo='Comprador'
-            )
-            
-            # Criar perfil de comprador
-            Comprador.objects.create(
-                user=user,
-                nome=nome,
-                telefone=telefone
-            )
-            
-            messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
-            return redirect('login')
+            r = requests.post(API_ENDPOINT + 'registerComprador/', data=data)
+            if r.status_code != 201:
+                messages.error(request, f'Erro ao criar conta: {r.text}')
+                return render(request, 'main/register_comprador.html')
+            elif r.status_code == 201:
+                messages.success(request, 'Cadastro realizado com sucesso!')
+                return redirect('login')   
             
         except Exception as e:
             messages.error(request, 'Erro ao criar conta. Tente novamente.')
@@ -168,24 +184,23 @@ def register_vendedor(request):
         
         try:
             # Criar usuário
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                tipo='Vendedor'
-            )
-            
-            # Criar perfil de vendedor
-            Vendedor.objects.create(
-                user=user,
-                nome_empresa=nome_empresa,
-                representante=representante,
-                telefone=telefone,
-                cnpj=cnpj
-            )
-            
-            messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
-            return redirect('login')
+            data = {
+                'nome_empresa': nome_empresa,
+                'representante': representante,
+                'cnpj': cnpj,
+                'telefone': telefone,
+                'username': username,
+                'email': email,
+                'password': password,
+                'tipo': 'Vendedor'
+            }
+            r = requests.post(API_ENDPOINT + 'registerVendedor/', data=data)
+            if r.status_code != 201:
+                messages.error(request, f'Erro ao criar conta: {r.text}')
+                return render(request, 'main/register_vendedor.html')   
+            elif r.status_code == 201:
+                messages.success(request, 'Cadastro realizado com sucesso!')
+                return redirect('login')
             
         except Exception as e:
             messages.error(request, 'Erro ao criar conta. Tente novamente.')
@@ -226,7 +241,7 @@ def dashboard_comprador(request):
     r = requests.get(API_ENDPOINT + 'vendedores/',headers=headers)
     if r.status_code == 200:
         estabelecimentos = r.json()
-    print(estabelecimentos)  # Debugging: Verifica o conteúdo de estabelecimentoss
+    
     
     #formatação de dados
     
@@ -245,13 +260,18 @@ def dashboard_comprador(request):
     return render(request, 'main/dashboard_comprador.html', context)
 
 
-@login_required
 def dashboard_vendedor(request):
-    if request.user.tipo != 'Vendedor':
+    tipo = request.session.get('user_tipo')
+    user_id = request.session.get('user_id')
+    headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
+    if tipo != 'vendedor':
         return redirect('dashboard_comprador')
     
-    vendedor = get_object_or_404(Vendedor, user=request.user)
-    
+    r = requests.get(API_ENDPOINT + f'vendedor/{user_id}', headers=headers)
+    if r.status_code == 200:
+        vendedor = r.json()
+    else:
+        return redirect('login')
     # Estatísticas
     pacotes = Pacote.objects.filter(vendedor=vendedor)
     total_pacotes = pacotes.count()
@@ -277,16 +297,40 @@ def dashboard_vendedor(request):
     
     return render(request, 'main/dashboard_vendedor.html', context)
 
-@login_required
+
+
 def pacotes_list(request):
-    if request.user.tipo != 'Comprador':
-        return redirect('dashboard_vendedor')
+    
+    # if request.user.tipo != 'Comprador':
+    #     return redirect('dashboard_vendedor')
     
     pacotes = Pacote.objects.filter(quant_disponivel__gt=0).order_by('-id')
     
     return render(request, 'main/pacotes_list.html', {'pacotes': pacotes})
 
-@login_required
+
+
+def estabelescimento(request,vendedor_id):
+    r = requests.get(API_ENDPOINT + f'vendedores/{vendedor_id}/')
+    if r.status_code == 200:
+            vendedor = r.json()
+    else:
+            messages.error(request, 'Erro ao carregar o estabelecimento.')
+            return redirect('dashboard_comprador')
+    r = requests.get(API_ENDPOINT + f'pacotes/?vendedor={vendedor_id}')
+    if r.status_code == 200:
+            pacotes = r.json()
+            print(pacotes)
+    else:
+            messages.error(request, 'Erro ao carregar os pacotes.')
+            return redirect('dashboard_comprador')
+    context = {
+        'vendedor': vendedor,
+        'pacotes': pacotes
+    }
+    return render(request, 'main/estabelecimento.html', context=context)
+
+
 def meus_pedidos(request):
     if request.user.tipo != 'Comprador':
         return redirect('dashboard_vendedor')

@@ -16,6 +16,7 @@ urlpatterns = [
     path('pacotes/', views.pacotes_list, name='pacotes_list'),
     path('meus-pedidos/', views.meus_pedidos, name='meus_pedidos'),
     path('fazer-pedido/<int:pacote_id>/', views.fazer_pedido, name='fazer_pedido'),
+    path('estabelecimento/<int:vendedor_id>/', views.estabelescimento, name='estabelecimento'),
     
     # Vendedor
     path('cadastrar-pacote/', views.cadastrar_pacote, name='cadastrar_pacote'),
