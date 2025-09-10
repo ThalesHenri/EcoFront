@@ -46,6 +46,7 @@ class Pacote(models.Model):
         ('Doce', 'Doce'),
     ]
     vendedor = models.ForeignKey(Vendedor, on_delete=models.CASCADE)
+    # na api ta vendedor_id
     nome_pacote = models.CharField(max_length=100)
     preco = models.DecimalField(max_digits=8, decimal_places=2)
     descricao = models.TextField()

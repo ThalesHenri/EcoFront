@@ -28,8 +28,6 @@ def get_user_type_from_token(token):
     try:
         payload = jwt.decode(token, options={"verify_signature": False})
         tipo = payload.get('tipo')
-        print(payload)
-        print(tipo)
         return tipo  # ou o nome do campo no seu token
     except jwt.DecodeError:
         return None
@@ -84,9 +82,11 @@ def login_view(request):
                 
                 elif user_tipo == 'vendedor':
                     user_id = get_user_id_from_token(access_token)
+                    print(user_id)
                     headers = {'Authorization': f'Bearer {access_token}'}
                     vendedor_request = requests.get(API_ENDPOINT + f'vendedores/?user={user_id}/', headers=headers)
                     if vendedor_request.status_code == 200:
+                        print("passou aqui")
                         messages.success(request, 'Login realizado com sucesso!')
                         return redirect('dashboard_vendedor')
                 
@@ -170,18 +170,6 @@ def register_vendedor(request):
             messages.error(request, 'As senhas não coincidem.')
             return render(request, 'main/register_vendedor.html')
         
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'Este email já está cadastrado.')
-            return render(request, 'main/register_vendedor.html')
-        
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Este nome de usuário já está em uso.')
-            return render(request, 'main/register_vendedor.html')
-        
-        if Vendedor.objects.filter(cnpj=cnpj).exists():
-            messages.error(request, 'Este CNPJ já está cadastrado.')
-            return render(request, 'main/register_vendedor.html')
-        
         try:
             # Criar usuário
             data = {
@@ -262,29 +250,37 @@ def dashboard_comprador(request):
 
 def dashboard_vendedor(request):
     tipo = request.session.get('user_tipo')
-    user_id = request.session.get('user_id')
+    print('Chegou aqui',tipo)
+    user_id = get_user_id_from_token(request.session.get('access_token'))
+    print(user_id)
     headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
     if tipo != 'vendedor':
         return redirect('dashboard_comprador')
-    
-    r = requests.get(API_ENDPOINT + f'vendedor/{user_id}', headers=headers)
+    r = requests.get(API_ENDPOINT + f'vendedores/{user_id}', headers=headers)
     if r.status_code == 200:
         vendedor = r.json()
-    else:
+    elif r.status_code == 404:
+        messages.error(request, 'Vendedor não encontrado.')
         return redirect('login')
+    
     # Estatísticas
-    pacotes = Pacote.objects.filter(vendedor=vendedor)
-    total_pacotes = pacotes.count()
+    pacotes_request = requests.get(API_ENDPOINT + f'pacotes/?vendedor={vendedor["id"]}', headers=headers)
+    if pacotes_request.status_code == 200:
+        pacotes = pacotes_request.json()
+    total_pacotes = pacotes.count(pacotes)
     
-    pedidos = Pedido.objects.filter(pacote__vendedor=vendedor)
-    pedidos_recebidos = pedidos.count()
-    total_vendas = pedidos.aggregate(Sum('preco_total'))['preco_total__sum'] or 0
+    pedidos_request = requests.get(API_ENDPOINT + f'pedidos/?vendedor={vendedor["id"]}', headers=headers)
+    if pedidos_request.status_code == 200:
+        pedidos = pedidos_request.json()
+    pedidos_recebidos = pedidos.count(pedidos)
     
-    avaliacoes = Avaliacao.objects.filter(vendedor=vendedor)
-    media_avaliacoes = avaliacoes.aggregate(Avg('avaliacao'))['avaliacao__avg'] or 0
-    
+    total_vendas = 0 # por enquanto
+    avaliacoes_request = requests.get(API_ENDPOINT + f'avaliacoes/?vendedor={vendedor["id"]}', headers=headers)
+    if avaliacoes_request.status_code == 200:
+        avaliacoes = avaliacoes_request.json()
+    media_avaliacoes = 0 # por enquanto
     # Pedidos recentes
-    pedidos_recentes = pedidos.order_by('-data_pedido')[:5]
+    pedidos_recentes = 0 # por enquanto
     
     context = {
         'vendedor': vendedor,
@@ -370,47 +366,68 @@ def fazer_pedido(request, pacote_id):
     
     return redirect('pacotes_list')
 
-@login_required
+
 def cadastrar_pacote(request):
-    if request.user.tipo != 'Vendedor':
-        return redirect('dashboard_comprador')
-    
+    user_id = get_user_id_from_token(request.session.get('access_token'))
+    tipo = request.session.get('user_tipo')
+    headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
+    if tipo != 'vendedor':
+        return redirect('dashboard_comprador')  
+          
     if request.method == 'POST':
-        vendedor = get_object_or_404(Vendedor, user=request.user)
-        
         nome_pacote = request.POST['nome_pacote']
         categoria = request.POST['categoria']
         preco = request.POST['preco']
         quant_disponivel = request.POST['quant_disponivel']
         descricao = request.POST['descricao']
-        
-        try:
-            Pacote.objects.create(
-                vendedor=vendedor,
-                nome_pacote=nome_pacote,
-                categoria=categoria,
-                preco=preco,
-                quant_disponivel=quant_disponivel,
-                descricao=descricao
-            )
-            
+        vendedor = user_id
+        print(vendedor,'olha aqui o vendedor')
+        data = {
+        'nome_pacote': nome_pacote,
+        'categoria': categoria,
+        'preco': preco,
+        'quant_disponivel': quant_disponivel,
+        'descricao': descricao,
+        'vendedor_id': vendedor
+        }
+        r = requests.post(API_ENDPOINT + 'pacotes/', data=data, headers=headers)
+        print(headers)
+        if r.status_code == 201:
             messages.success(request, 'Pacote cadastrado com sucesso!')
+            print("pacotes cadastrados com sucesso!")
             return redirect('meus_pacotes')
-            
-        except Exception as e:
-            messages.error(request, 'Erro ao cadastrar pacote. Tente novamente.')
-    
+        elif r.status_code == 400:
+            errors = r.json()
+            for field, msgs in errors.items():
+                for msg in msgs:
+                    messages.error(request, f"{field}: {msg}")
+        elif r.status_code == 403:
+            messages.error(request, 'Você não tem permissão para realizar esta ação.')            
+    elif request.method == 'GET':
+        pass
+    else:
+        messages.error(request, 'Método inválido.')
+        return redirect('login')
     return render(request, 'main/cadastrar_pacote.html')
 
-@login_required
+
 def meus_pacotes(request):
-    if request.user.tipo != 'Vendedor':
-        return redirect('dashboard_comprador')
+    tipo = get_user_type_from_token(request.session.get('access_token'))
+    if tipo != 'vendedor':
+        return redirect('dashboard_comprador')  
+    headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
+    user_id = get_user_id_from_token(request.session.get('access_token'))    
+    pacotes_request = requests.get(API_ENDPOINT + f'pacotes/?vendedor={user_id}',headers=headers)
+    if pacotes_request.status_code == 200:
+        pacotes = pacotes_request.json()
+    else:
+        pacotes = []
+        messages.error(request, 'Erro ao carregar os pacotes.')
+    context = {
+        'pacotes': pacotes
+    }
     
-    vendedor = get_object_or_404(Vendedor, user=request.user)
-    pacotes = Pacote.objects.filter(vendedor=vendedor).order_by('-id')
-    
-    return render(request, 'main/meus_pacotes.html', {'pacotes': pacotes})
+    return render(request, 'main/meus_pacotes.html', context = context)
 
 @login_required
 def pedidos_recebidos(request):
