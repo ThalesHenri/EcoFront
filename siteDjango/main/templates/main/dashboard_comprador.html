@@ -104,10 +104,10 @@
                 {% for pedido in pedidos_recentes %}
                 <tr>
                     <td>#{{ pedido.id }}</td>
-                    <td>{{ pedido.pacote.nome_pacote }}</td>
+                    <td>{{ pedido.nome_pacote }}</td>
                     <td>R$ {{ pedido.preco_total|floatformat:2 }}</td>
                     <td><span class="status-badge status-{{ pedido.status_pedido|lower }}">{{ pedido.status_pedido }}</span></td>
-                    <td>{{ pedido.data_pedido|date:"d/m/Y" }}</td>
+                    <td>{{ pedido.data_compra }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

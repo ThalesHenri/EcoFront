@@ -505,3 +505,48 @@ section {
     font-size: 0.85rem;
     color: #555;
 }
+
+
+/* Pagamento */
+.pagamento-status {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.pagamento-status.sucesso h1 {
+    color: green;
+}
+
+.pagamento-status.falha h1 {
+    color: red;
+}
+
+.pagamento-status .btn {
+    display: inline-block;
+    margin: 10px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    background: #008c4a;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.pagamento-status .btn-secundario {
+    background: #555;
+}
+/* Loader - bola girando */
+.loader {
+    border: 8px solid #f3f3f3;   /* cor de fundo */
+    border-top: 8px solid #e6a800; /* cor da "bola" */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto; /* centralizar */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

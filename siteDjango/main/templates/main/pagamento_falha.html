@@ -1,0 +1,16 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block title %}Falha no Pagamento - EcoSertão{% endblock %}
+
+{% block content %}
+<section class="pagamento-status falha">
+    <div class="container">
+        <h1>❌ Falha no Pagamento</h1>
+        <p>Infelizmente não conseguimos processar o seu pagamento.</p>
+        <p>Verifique os dados do cartão, saldo disponível ou tente novamente mais tarde.</p>
+        <a href="{% url 'pacotes_list' %}" class="btn">Tentar Novamente</a>
+        <a href="{% url 'home' %}" class="btn btn-secundario">Voltar ao Início</a>
+    </div>
+</section>
+{% endblock %}

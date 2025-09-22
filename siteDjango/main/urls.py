@@ -17,6 +17,9 @@ urlpatterns = [
     path('meus-pedidos/', views.meus_pedidos, name='meus_pedidos'),
     path('fazer-pedido/<int:pacote_id>/', views.fazer_pedido, name='fazer_pedido'),
     path('estabelecimento/<int:vendedor_id>/', views.estabelescimento, name='estabelecimento'),
+    path('pagamento-sucesso/', views.pagamentoSucesso, name='pagamento_sucesso'),
+    path('pagamento-falha/', views.pagamentoFalha, name='pagamento_falha'),
+    path('pagamento-pendente/', views.pagamentoPendente, name='pagamento_pendente'),
     
     # Vendedor
     path('cadastrar-pacote/', views.cadastrar_pacote, name='cadastrar_pacote'),

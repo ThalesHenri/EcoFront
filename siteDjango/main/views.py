@@ -243,7 +243,7 @@ def dashboard_comprador(request):
         'avaliacoes_feitas': avaliacoes_feitas,
         'pedidos_recentes': pedidos_recentes,
     }
-
+    print(pedidos)
     return render(request, 'main/dashboard_comprador.html', context)
 
 
@@ -390,7 +390,12 @@ def fazer_pedido(request, pacote_id):
                 messages.error(request, f'Erro ao fazer pedido: {r.text}')
                 return redirect('pacotes_list')
             elif r.status_code == 201:
-                print("Pedido realizado com sucesso!")
+                r.response = r.json()
+                print("Pedido criado com sucesso!")
+                # capta o initiation point
+                initiation_point = r.response.get('init_point')
+                print(initiation_point,"INICIATION POINT AQUI")
+                return redirect(initiation_point)
             
             # Reduzir quantidade disponível
             pacote['quant_disponivel'] -= 1
@@ -409,6 +414,16 @@ def fazer_pedido(request, pacote_id):
     
     return redirect('pacotes_list')
 
+
+
+def pagamentoSucesso(request):
+    return render(request, 'main/pagamento_sucesso.html')
+
+def pagamentoFalha(request):
+    return render(request, 'main/pagamento_falha.html')
+
+def pagamentoPendente(request):
+    return render(request, 'main/pagamento_pendente.html')
 
 def cadastrar_pacote(request):
     access_token = request.session.get('access_token')
