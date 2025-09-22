@@ -86,7 +86,6 @@ def login_view(request):
                     headers = {'Authorization': f'Bearer {access_token}'}
                     vendedor_request = requests.get(API_ENDPOINT + f'vendedores/?user={user_id}/', headers=headers)
                     if vendedor_request.status_code == 200:
-                        print("passou aqui")
                         messages.success(request, 'Login realizado com sucesso!')
                         return redirect('dashboard_vendedor')
                 
@@ -219,7 +218,7 @@ def dashboard_comprador(request):
 
     total_pedidos = len(pedidos)
     pedidos_pendentes = len([p for p in pedidos if p.get('status_pedido') == 'Em andamento'])
-    total_gasto = sum(p.get('preco_total', 0) for p in pedidos)
+    total_gasto = sum(float(p.get('preco_total', 0)) for p in pedidos)
     pedidos_recentes = sorted(pedidos, key=lambda x: x.get('data_pedido', ''), reverse=True)[:5]
 
     # Avaliações feitas pelo comprador
@@ -250,9 +249,7 @@ def dashboard_comprador(request):
 
 def dashboard_vendedor(request):
     tipo = request.session.get('user_tipo')
-    print('Chegou aqui',tipo)
     user_id = get_user_id_from_token(request.session.get('access_token'))
-    print(user_id)
     headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
     if tipo != 'vendedor':
         return redirect('dashboard_comprador')
@@ -296,13 +293,22 @@ def dashboard_vendedor(request):
 
 
 def pacotes_list(request):
-    
-    # if request.user.tipo != 'Comprador':
-    #     return redirect('dashboard_vendedor')
-    
-    pacotes = Pacote.objects.filter(quant_disponivel__gt=0).order_by('-id')
-    
-    return render(request, 'main/pacotes_list.html', {'pacotes': pacotes})
+    tipo = get_user_type_from_token(request.session.get('access_token'))
+    headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
+    if tipo != 'comprador':
+        return redirect('dashboard_vendedor')  
+    r = requests.get(API_ENDPOINT + 'pacotes/', headers=headers)
+    if r.status_code == 200:
+        pacotes = r.json()
+    else:
+        pacotes = []
+        messages.error(request, 'Erro ao carregar os pacotes.')
+
+    context = {
+        'pacotes': pacotes,
+    }
+   
+    return render(request, 'main/pacotes_list.html', context=context)
 
 
 
@@ -316,7 +322,7 @@ def estabelescimento(request,vendedor_id):
     r = requests.get(API_ENDPOINT + f'pacotes/?vendedor={vendedor_id}')
     if r.status_code == 200:
             pacotes = r.json()
-            print(pacotes)
+           
     else:
             messages.error(request, 'Erro ao carregar os pacotes.')
             return redirect('dashboard_comprador')
@@ -328,36 +334,73 @@ def estabelescimento(request,vendedor_id):
 
 
 def meus_pedidos(request):
-    if request.user.tipo != 'Comprador':
+    access_token = request.session.get('access_token')
+    headers = {'Authorization': f'Bearer {access_token}'}
+    tipo = get_user_type_from_token(access_token)
+    user_id = get_user_id_from_token(access_token)
+    if tipo != 'comprador':
         return redirect('dashboard_vendedor')
-    
-    comprador = get_object_or_404(Comprador, user=request.user)
-    pedidos = Pedido.objects.filter(comprador=comprador).order_by('-data_pedido')
-    
-    return render(request, 'main/meus_pedidos.html', {'pedidos': pedidos})
+    pedidos_request = requests.get(API_ENDPOINT + f'pedidos/?comprador__user={user_id}', headers=headers)
+    if pedidos_request.status_code == 200:
+        pedidos = pedidos_request.json()
+    else:
+        pedidos = []
+        messages.error(request, 'Erro ao carregar os pedidos.')
+    context = {
+        'pedidos':pedidos
+    }
+    return render(request, 'main/meus_pedidos.html', context=context)
 
-@login_required
+
 def fazer_pedido(request, pacote_id):
-    if request.user.tipo != 'Comprador':
+    access_token = request.session.get('access_token')
+    tipo = get_user_type_from_token(access_token)
+    user_id = get_user_id_from_token(access_token)
+    headers = {'Authorization': f'Bearer {access_token}'}
+    
+    if tipo != 'comprador':
         return redirect('dashboard_vendedor')
     
     if request.method == 'POST':
-        comprador = get_object_or_404(Comprador, user=request.user)
-        pacote = get_object_or_404(Pacote, id=pacote_id)
-        
-        if pacote.quant_disponivel > 0:
+        comprador_request  = requests.get(API_ENDPOINT + f'compradores/{user_id}', headers=headers)
+        if comprador_request.status_code == 200:
+            comprador = comprador_request.json()
+        else:
+            messages.error(request, 'Erro ao carregar o comprador.')
+            print('erro ao carregar o comprador')
+            return redirect('pacotes_list')
+        pacote_request = requests.get(API_ENDPOINT + f'pacotes/{pacote_id}', headers=headers)
+        if pacote_request.status_code == 200:
+            pacote = pacote_request.json()
+        else:
+            messages.error(request, 'Erro ao carregar o pacote.')
+            return redirect('pacotes_list')
+        if pacote['quant_disponivel'] > 0:
             # Criar pedido
-            pedido = Pedido.objects.create(
-                comprador=comprador,
-                pacote=pacote,
-                preco_total=pacote.preco,
-                status_pedido='Em andamento',
-                status_pagamento='Pendente'
-            )
+            data = {
+                'comprador': comprador['id'],
+                'pacote': pacote['id'],
+                'preco_total': pacote['preco'],
+                'status_pagamento': 'Pendente',
+                'status_pedido': 'Em andamento'
+            }
+            r = requests.post(API_ENDPOINT + 'pedidos/', data=data, headers=headers)
+            print(headers)
+            if r.status_code != 201:
+                messages.error(request, f'Erro ao fazer pedido: {r.text}')
+                return redirect('pacotes_list')
+            elif r.status_code == 201:
+                print("Pedido realizado com sucesso!")
             
             # Reduzir quantidade disponível
-            pacote.quant_disponivel -= 1
-            pacote.save()
+            pacote['quant_disponivel'] -= 1
+            r = requests.patch(API_ENDPOINT + f'pacotes/{pacote_id}/', data=pacote, headers=headers)
+            if r.status_code != 200:
+                messages.error(request, f'Erro ao atualizar o pacote: {r.text}')
+                return redirect('pacotes_list')
+            elif r.status_code == 200:
+                print("Pedido foi feito")
+                
             
             messages.success(request, 'Pedido realizado com sucesso!')
             return redirect('meus_pedidos')
@@ -368,30 +411,30 @@ def fazer_pedido(request, pacote_id):
 
 
 def cadastrar_pacote(request):
-    user_id = get_user_id_from_token(request.session.get('access_token'))
+    access_token = request.session.get('access_token')
+    user_id = get_user_id_from_token(access_token)
     tipo = request.session.get('user_tipo')
-    headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
+    headers = {'Authorization': f'Bearer {access_token}'}
+    
     if tipo != 'vendedor':
         return redirect('dashboard_comprador')  
-          
+    vendedor_request = requests.get(API_ENDPOINT + f'vendedores/{user_id}/', headers=headers).json()     
     if request.method == 'POST':
         nome_pacote = request.POST['nome_pacote']
         categoria = request.POST['categoria']
         preco = request.POST['preco']
         quant_disponivel = request.POST['quant_disponivel']
         descricao = request.POST['descricao']
-        vendedor = user_id
-        print(vendedor,'olha aqui o vendedor')
+        
         data = {
         'nome_pacote': nome_pacote,
         'categoria': categoria,
         'preco': preco,
         'quant_disponivel': quant_disponivel,
         'descricao': descricao,
-        'vendedor_id': vendedor
+        'vendedor_id': vendedor_request['id']
         }
         r = requests.post(API_ENDPOINT + 'pacotes/', data=data, headers=headers)
-        print(headers)
         if r.status_code == 201:
             messages.success(request, 'Pacote cadastrado com sucesso!')
             print("pacotes cadastrados com sucesso!")

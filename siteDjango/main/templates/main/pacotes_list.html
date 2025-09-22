@@ -20,7 +20,7 @@
                 <p>{{ pacote.descricao }}</p>
                 <div class="price">R$ {{ pacote.preco|floatformat:2 }}</div>
                 <p><strong>Disponível:</strong> {{ pacote.quant_disponivel }} unidades</p>
-                <p><strong>Vendedor:</strong> {{ pacote.vendedor.nome_empresa }}</p>
+                <p><strong>Vendedor:</strong> {{ pacote.nome_vendedor}}</p>
                 
                 {% if pacote.quant_disponivel > 0 %}
                     <form method="post" action="{% url 'fazer_pedido' pacote.id %}">
@@ -39,6 +39,10 @@
             </div>
         </div>
         {% endfor %}
+    
+    </div>
+    <div class="form-links">
+        <a href="{% url 'dashboard_comprador' %}">Voltar ao Dashboard</a>
     </div>
 </div>
 {% endblock content %}
