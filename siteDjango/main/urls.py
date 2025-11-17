@@ -15,6 +15,8 @@ urlpatterns = [
     # Comprador
     path('pacotes/', views.pacotes_list, name='pacotes_list'),
     path('meus-pedidos/', views.meus_pedidos, name='meus_pedidos'),
+    path('excluir-pedido/<int:pedido_id>/', views.excluir_pedido, name='excluir_pedido'),
+    path('cancelar-pedido/<int:pedido_id>/', views.cancelar_pedido, name='cancelar_pedido'),
     path('fazer-pedido/<int:pacote_id>/', views.fazer_pedido, name='fazer_pedido'),
     path('estabelecimento/<int:vendedor_id>/', views.estabelescimento, name='estabelecimento'),
     path('pagamento-sucesso/', views.pagamentoSucesso, name='pagamento_sucesso'),
@@ -24,8 +26,10 @@ urlpatterns = [
     # Vendedor
     path('cadastrar-pacote/', views.cadastrar_pacote, name='cadastrar_pacote'),
     path('meus-pacotes/', views.meus_pacotes, name='meus_pacotes'),
+    path('editar-pacote/<int:pacote_id>/', views.editar_pacote, name='editar_pacote'),
+    path('excluir-pacote/<int:pacote_id>/', views.excluir_pacote, name='excluir_pacote'),
     path('pedidos-recebidos/', views.pedidos_recebidos, name='pedidos_recebidos'),
-    path('atualizar-pedido/<int:pedido_id>/', views.atualizar_pedido, name='atualizar_pedido'),
+    path('detalhes-pedido-vendedor/<int:pedido_id>/', views.detalhes_pedido, name='detalhes_pedido'),
     
     # URLs antigas para compatibilidade
     path('registerComprador/', views.registerComprador, name='registerComprador'),

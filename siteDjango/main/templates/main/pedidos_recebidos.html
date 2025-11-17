@@ -6,17 +6,26 @@
 <div class="dashboard fade-in">
     <div class="dashboard-header">
         <h1>Pedidos Recebidos</h1>
-        <p>Gerencie os pedidos dos seus clientes</p>
+        <p>Acompanhe os pedidos feitos nos seus pacotes</p>
     </div>
-    
+
     {% if pedidos %}
+    <!-- 🔹 Botões de filtro -->
+    <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="todos">Todos</button>
+        <button class="filter-btn" data-filter="em aberto">Em aberto</button>
+        <button class="filter-btn" data-filter="preparando">Preparando</button>
+        <button class="filter-btn" data-filter="finalizado">Finalizado</button>
+        <button class="filter-btn" data-filter="cancelado">Cancelado</button>
+    </div>
+
     <div class="table-container">
-        <table class="table">
+        <table class="table" id="tabela-pedidos">
             <thead>
                 <tr>
-                    <th>Pedido</th>
-                    <th>Cliente</th>
+                    <th>ID</th>
                     <th>Pacote</th>
+                    <th>Comprador</th>
                     <th>Valor</th>
                     <th>Status Pedido</th>
                     <th>Status Pagamento</th>
@@ -26,35 +35,88 @@
             </thead>
             <tbody>
                 {% for pedido in pedidos %}
-                <tr>
+                <tr data-status="{{ pedido.status_pedido|lower }}">
                     <td>#{{ pedido.id }}</td>
-                    <td>{{ pedido.comprador.nome }}</td>
-                    <td>{{ pedido.pacote.nome_pacote }}</td>
+                    <td>{{ pedido.nome_pacote }}</td>
+                    <td>{{ pedido.nome_comprador }}</td>
                     <td>R$ {{ pedido.preco_total|floatformat:2 }}</td>
                     <td><span class="status-badge status-{{ pedido.status_pedido|lower }}">{{ pedido.status_pedido }}</span></td>
                     <td><span class="status-badge status-{{ pedido.status_pagamento|lower }}">{{ pedido.status_pagamento }}</span></td>
-                    <td>{{ pedido.data_pedido|date:"d/m/Y H:i" }}</td>
-                    <td>
-                        {% if pedido.status_pedido == 'Em andamento' %}
-                            <form method="post" action="{% url 'atualizar_pedido' pedido.id %}" style="display: inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="status" value="Finalizado">
-                                <button type="submit" class="btn-card" style="font-size: 0.8rem;">Finalizar</button>
-                            </form>
-                        {% endif %}
+                    <td>{{ pedido.data_compra }}</td>
+                    <td style="display:flex; gap:5px;">
+                        <a href="{% url 'detalhes_pedido' pedido.id %}" class="btn-card">Detalhes</a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
     {% else %}
     <div class="card">
         <div class="card-body">
             <p>Você ainda não recebeu nenhum pedido.</p>
-            <a href="{% url 'dashboard_vendedor' %}" class="btn-card">Voltar ao Dashboard</a>
+            <a href="{% url 'dashboard_vendedor' %}" class="btn-card">Voltar</a>
         </div>
     </div>
     {% endif %}
+
+    <div class="form-links">
+        <a href="{% url 'dashboard_vendedor' %}">Voltar ao Dashboard</a>
+    </div>
 </div>
+
+<!-- 🔹 Script de filtro -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".filter-btn");
+    const rows = document.querySelectorAll("#tabela-pedidos tbody tr");
+
+    buttons.forEach(button => {
+        button.addEventListener("click", () => {
+            const filter = button.getAttribute("data-filter");
+            
+            // Atualiza o botão ativo
+            buttons.forEach(b => b.classList.remove("active"));
+            button.classList.add("active");
+
+            // Filtra os pedidos
+            rows.forEach(row => {
+                const status = row.getAttribute("data-status");
+                if (filter === "todos" || status === filter) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    });
+});
+</script>
+
+<!-- 🔹 Estilos dos botões -->
+<style>
+.filter-buttons {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: none;
+    background-color: #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+</style>
 {% endblock content %}

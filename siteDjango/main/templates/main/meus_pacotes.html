@@ -9,24 +9,38 @@
         <p>Gerencie seus pacotes cadastrados</p>
         <a href="{% url 'cadastrar_pacote' %}" class="btn-primary">Cadastrar Novo Pacote</a>
     </div>
-    
+
     {% if pacotes %}
-    <div class="cards-grid">
+    <!-- 🔹 Botões de filtro -->
+    <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="todos">Todos</button>
+        <button class="filter-btn" data-filter="salgada">Salgada</button>
+        <button class="filter-btn" data-filter="mista">Mista</button>
+        <button class="filter-btn" data-filter="doce">Doce</button>
+    </div>
+
+    <div class="cards-grid" id="pacotes-lista">
         {% for pacote in pacotes %}
-        <div class="card">
+        <div class="card" data-categoria="{{ pacote.categoria|lower }}">
             <div class="card-header">
                 <h3>{{ pacote.nome_pacote }}</h3>
                 <span class="category-badge">{{ pacote.categoria }}</span>
             </div>
+            <img src="{{ pacote.imagem }}" alt="imagem" class="img-card">
             <div class="card-body">
                 <p>{{ pacote.descricao }}</p>
                 <div class="price">R$ {{ pacote.preco|floatformat:2 }}</div>
                 <p><strong>Disponível:</strong> {{ pacote.quant_disponivel }} unidades</p>
                 <p><strong>Cadastrado em:</strong> {{ pacote.data_cadastro|date:"d/m/Y" }}</p>
-                
+
                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                    <button class="btn-card" style="flex: 1;">Editar</button>
-                    <button class="btn-card" style="flex: 1; background: #f44336;">Excluir</button>
+                    <a href="{% url 'editar_pacote' pacote.id %}">
+                        <button class="btn-card" style="flex: 1;">Editar</button>
+                    </a>
+                    <a href="{% url 'excluir_pacote' pacote.id %}" 
+                       onclick="return confirm('Tem certeza que deseja excluir esse pacote?')">
+                        <button class="btn-card" style="flex: 1; background: #f44336;">Excluir</button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -40,8 +54,63 @@
         </div>
     </div>
     {% endif %}
+
     <div class="form-links">
-            <a href="{% url 'dashboard_vendedor' %}">Voltar ao Dashboard</a>
-        </div>
+        <a href="{% url 'dashboard_vendedor' %}">Voltar ao Dashboard</a>
+    </div>
 </div>
+
+<!-- 🔹 Script de filtro -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".filter-btn");
+    const cards = document.querySelectorAll("#pacotes-lista .card");
+
+    buttons.forEach(button => {
+        button.addEventListener("click", () => {
+            const filter = button.getAttribute("data-filter");
+            
+            // Atualiza botão ativo
+            buttons.forEach(b => b.classList.remove("active"));
+            button.classList.add("active");
+
+            // Mostra ou esconde pacotes
+            cards.forEach(card => {
+                const categoria = card.getAttribute("data-categoria");
+                if (filter === "todos" || categoria === filter) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    });
+});
+</script>
+
+<!-- 🔹 Estilos dos botões -->
+<style>
+.filter-buttons {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: none;
+    background-color: #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-weight: 500;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background-color: var(--cor-terciaria);
+    color: #fff;
+}
+</style>
 {% endblock content %}

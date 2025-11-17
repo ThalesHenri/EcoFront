@@ -1,9 +1,10 @@
 {% extends "main/base.html" %}
+{% load static %}
 
 {% block content %}
 <section class="hero fade-in">
     <div class="hero-content">
-        <h1>Bem-vindo ao <span>EcoSertão</span></h1>
+        <h1>Bem-vindo ao <span>FoodZip</span></h1>
         <p>Soluções sustentáveis para o comércio alimentício, unindo inovação e preservação.</p>
         {% if user.is_authenticated %}
             {% if user.tipo == 'Comprador' %}
@@ -18,9 +19,10 @@
 </section>
 
 <section id="sobre" class="sobre fade-in">
-    <h2>Sobre Nós</h2>
-    <p>Compre alimentos de qualidade com desconto e ajude a reduzir o desperdício nos pequenos comércios locais da sua cidade. Nossa plataforma conecta compradores conscientes com vendedores locais, promovendo sustentabilidade e economia circular.</p>
-    
+    <div class="sobre-container">
+        <img src="{% static 'assets/assetsJr/AspasDouradas.png' %}" alt="FoodZip" class="sobre-logo">
+        <h3>Seu <span>Impacto positivo</span> começa aqui. <br>Econtre as melhores oportunidades perto de você.</h3>
+    </div>
     <div class="dashboard-stats" style="margin-top: 2rem;">
         <div class="stat-card">
             <h3>🌱</h3>

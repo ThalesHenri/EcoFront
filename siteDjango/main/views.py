@@ -19,10 +19,18 @@ def get_user_id_from_token(token):
     try:
         # Decodifica o token sem verificar assinatura
         payload = jwt.decode(token, options={"verify_signature": False})
+        print(payload)
         return payload.get('user_id')  # ou o nome do campo no seu token
     except jwt.DecodeError:
         return None
 
+def get_vendedor_id_from_token(token):
+    try:
+        # Decodifica o token sem verificar assinatura
+        payload = jwt.decode(token, options={"verify_signature": False})
+        return payload.get('real_id')  # ou o nome do campo no seu token
+    except jwt.DecodeError:
+        return None
 
 def get_user_type_from_token(token):
     try:
@@ -228,6 +236,8 @@ def dashboard_comprador(request):
     r = requests.get(API_ENDPOINT + 'vendedores/',headers=headers)
     if r.status_code == 200:
         estabelecimentos = r.json()
+    else:
+        estabelecimentos = []
     
     
     #formatação de dados
@@ -249,30 +259,31 @@ def dashboard_comprador(request):
 
 def dashboard_vendedor(request):
     tipo = request.session.get('user_tipo')
-    user_id = get_user_id_from_token(request.session.get('access_token'))
+    user_id = get_vendedor_id_from_token(request.session.get('access_token'))
     headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
     if tipo != 'vendedor':
         return redirect('dashboard_comprador')
     r = requests.get(API_ENDPOINT + f'vendedores/{user_id}', headers=headers)
+    print(f"o user id é {user_id}")
     if r.status_code == 200:
         vendedor = r.json()
     elif r.status_code == 404:
         messages.error(request, 'Vendedor não encontrado.')
         return redirect('login')
-    
+    print(vendedor["id"])
     # Estatísticas
-    pacotes_request = requests.get(API_ENDPOINT + f'pacotes/?vendedor={vendedor["id"]}', headers=headers)
+    pacotes_request = requests.get(API_ENDPOINT + f'pacotes/?vendedor={user_id}', headers=headers)
     if pacotes_request.status_code == 200:
         pacotes = pacotes_request.json()
-    total_pacotes = pacotes.count(pacotes)
+        total_pacotes = len(pacotes)
     
-    pedidos_request = requests.get(API_ENDPOINT + f'pedidos/?vendedor={vendedor["id"]}', headers=headers)
+    pedidos_request = requests.get(API_ENDPOINT + f'pedidos/?vendedor={user_id}', headers=headers)
     if pedidos_request.status_code == 200:
         pedidos = pedidos_request.json()
-    pedidos_recebidos = pedidos.count(pedidos)
+        pedidos_recebidos = len(pedidos)
     
     total_vendas = 0 # por enquanto
-    avaliacoes_request = requests.get(API_ENDPOINT + f'avaliacoes/?vendedor={vendedor["id"]}', headers=headers)
+    avaliacoes_request = requests.get(API_ENDPOINT + f'avaliacoes/?vendedor={user_id}', headers=headers)
     if avaliacoes_request.status_code == 200:
         avaliacoes = avaliacoes_request.json()
     media_avaliacoes = 0 # por enquanto
@@ -330,6 +341,7 @@ def estabelescimento(request,vendedor_id):
         'vendedor': vendedor,
         'pacotes': pacotes
     }
+    print(vendedor)
     return render(request, 'main/estabelecimento.html', context=context)
 
 
@@ -382,7 +394,7 @@ def fazer_pedido(request, pacote_id):
                 'pacote': pacote['id'],
                 'preco_total': pacote['preco'],
                 'status_pagamento': 'Pendente',
-                'status_pedido': 'Em andamento'
+                'status_pedido': 'Em andamento'  # Inicialmente vazio
             }
             r = requests.post(API_ENDPOINT + 'pedidos/', data=data, headers=headers)
             print(headers)
@@ -427,7 +439,7 @@ def pagamentoPendente(request):
 
 def cadastrar_pacote(request):
     access_token = request.session.get('access_token')
-    user_id = get_user_id_from_token(access_token)
+    user_id = get_vendedor_id_from_token(access_token)
     tipo = request.session.get('user_tipo')
     headers = {'Authorization': f'Bearer {access_token}'}
     
@@ -447,9 +459,14 @@ def cadastrar_pacote(request):
         'preco': preco,
         'quant_disponivel': quant_disponivel,
         'descricao': descricao,
-        'vendedor_id': vendedor_request['id']
+        'vendedor_id': vendedor_request['id'],
+        
         }
-        r = requests.post(API_ENDPOINT + 'pacotes/', data=data, headers=headers)
+        imagem = request.FILES.get('imagem')
+        files = {}
+        if imagem:
+            files['imagem'] = (imagem.name, imagem.read(), imagem.content_type)
+        r = requests.post(API_ENDPOINT + 'pacotes/', data=data,files=files, headers=headers)
         if r.status_code == 201:
             messages.success(request, 'Pacote cadastrado com sucesso!')
             print("pacotes cadastrados com sucesso!")
@@ -474,7 +491,7 @@ def meus_pacotes(request):
     if tipo != 'vendedor':
         return redirect('dashboard_comprador')  
     headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
-    user_id = get_user_id_from_token(request.session.get('access_token'))    
+    user_id = get_vendedor_id_from_token(request.session.get('access_token'))    
     pacotes_request = requests.get(API_ENDPOINT + f'pacotes/?vendedor={user_id}',headers=headers)
     if pacotes_request.status_code == 200:
         pacotes = pacotes_request.json()
@@ -487,36 +504,180 @@ def meus_pacotes(request):
     
     return render(request, 'main/meus_pacotes.html', context = context)
 
-@login_required
-def pedidos_recebidos(request):
-    if request.user.tipo != 'Vendedor':
-        return redirect('dashboard_comprador')
-    
-    vendedor = get_object_or_404(Vendedor, user=request.user)
-    pedidos = Pedido.objects.filter(pacote__vendedor=vendedor).order_by('-data_pedido')
-    
-    return render(request, 'main/pedidos_recebidos.html', {'pedidos': pedidos})
 
-@login_required
-def atualizar_pedido(request, pedido_id):
-    if request.user.tipo != 'Vendedor':
-        return redirect('dashboard_comprador')
-    
+def editar_pacote(request, pacote_id):
+    tipo = get_user_type_from_token(request.session.get('access_token'))
+    if tipo != 'vendedor':
+        return redirect('dashboard_comprador')  
+    headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
     if request.method == 'POST':
-        vendedor = get_object_or_404(Vendedor, user=request.user)
-        pedido = get_object_or_404(Pedido, id=pedido_id, pacote__vendedor=vendedor)
+        nome_pacote = request.POST['nome_pacote']
+        categoria = request.POST['categoria']
+        preco = request.POST['preco']
+        quant_disponivel = request.POST['quant_disponivel']
+        descricao = request.POST['descricao']
         
-        status = request.POST.get('status')
-        if status in ['Finalizado', 'Cancelado']:
-            pedido.status_pedido = status
-            if status == 'Finalizado':
-                pedido.status_pagamento = 'Aprovado'
-            pedido.save()
-            
-            messages.success(request, f'Pedido {status.lower()} com sucesso!')
-    
-    return redirect('pedidos_recebidos')
+        data = {
+        'nome_pacote': nome_pacote,
+        'categoria': categoria,
+        'preco': preco,
+        'quant_disponivel': quant_disponivel,
+        'descricao': descricao,
+        }
+        imagem = request.FILES.get('imagem')
+        files = {}
+        if imagem:
+            files['imagem'] = (imagem.name, imagem.read(), imagem.content_type)
+        r = requests.patch(API_ENDPOINT + f'pacotes/{pacote_id}/', data=data,files=files, headers=headers)
+        print(headers)
+        if r.status_code == 200:
+            messages.success(request, 'Pacote atualizado com sucesso!')
+            print("pacotes atualizados com sucesso!")
+            print(imagem.name)
+            return redirect('meus_pacotes')
+        else:
+            messages.error(request, f'Erro ao atualizar o pacote: {r.text}')
+            return redirect('meus_pacotes')
+    elif request.method == 'GET':
+        pacote_request = requests.get(API_ENDPOINT + f'pacotes/{pacote_id}/', headers=headers)
+        if pacote_request.status_code == 200:
+            pacote = pacote_request.json()
+            return render(request, 'main/editar_pacotes.html', {'pacote': pacote})
+        else:
+            messages.error(request, 'Erro ao carregar o pacote.')
+            return redirect('meus_pacotes')
 
+
+def excluir_pacote(request, pacote_id):
+    tipo = get_user_type_from_token(request.session.get('access_token'))
+    if tipo != 'vendedor':
+        return redirect('dashboard_comprador')  
+    headers = {'Authorization': f'Bearer {request.session.get("access_token")}'}
+    r = requests.delete(API_ENDPOINT + f'pacotes/{pacote_id}/', headers=headers)
+    if r.status_code == 204:
+        messages.success(request, 'Pacote excluído com sucesso!')
+    else:
+        messages.error(request, f'Erro ao excluir o pacote: {r.text}')
+    return redirect('meus_pacotes')
+
+
+def pedidos_recebidos(request):
+    # Verificar se o usuário é um vendedor
+    access_token = request.session.get('access_token')
+    tipo = get_user_type_from_token(access_token)
+    if tipo != 'vendedor':
+        messages.error(request, 'Acesso negado. Você não é um vendedor.')
+    # Verificar o Id do usuario
+    vendedor_id = get_vendedor_id_from_token(access_token)
+    headers = {'Authorization': f'Bearer {access_token}'}
+    # Busca os pedidos baseados no id do vendedor
+    pedidos_request = requests.get(API_ENDPOINT + f'pedidos/vendedor/{vendedor_id}/', headers=headers)
+    if pedidos_request.status_code == 200:
+        pedidos = pedidos_request.json()
+    else:
+        pedidos = []
+        messages.error(request, 'Erro ao carregar os pedidos.')
+    # Renderiza o template e passa os pedidos como contexto
+    context = {
+        'pedidos': pedidos
+    }
+    print(pedidos)
+    return render(request, 'main/pedidos_recebidos.html', context=context)
+
+
+
+def detalhes_pedido(request, pedido_id):
+    access_token = request.session.get('access_token')
+    tipo = get_user_type_from_token(access_token)
+    headers = {'Authorization': f'Bearer {access_token}'}
+    if tipo == 'comprador':
+        pedido_request = requests.get(API_ENDPOINT + f'pedidos/{pedido_id}/', headers=headers)
+        if pedido_request.status_code == 200:
+            pedido = pedido_request.json()
+        else:
+            messages.error(request, 'Erro ao carregar o pedido.')
+            return redirect('meus_pedidos')
+    elif tipo == 'vendedor':
+        pedido_request = requests.get(API_ENDPOINT + f'pedidos/{pedido_id}/', headers=headers)
+        if pedido_request.status_code == 200:
+            pedido = pedido_request.json()
+        else:
+            messages.error(request, 'Erro ao carregar o pedido.')
+            return redirect('pedidos_recebidos')
+    else:
+        return redirect('login')
+    
+    context = {
+        'pedido': pedido
+    }
+    print(pedido)
+    return render(request, 'main/detalhes_pedido.html', context=context)
+
+    
+    
+def excluir_pedido(request, pedido_id):
+    access_token = request.session.get('access_token')
+    tipo = get_user_type_from_token(access_token)
+    user_id = get_user_id_from_token(access_token)
+    headers = {'Authorization': f'Bearer {access_token}'}
+    if tipo != 'comprador':
+        return redirect('dashboard_vendedor')
+    pedido_request = requests.get(API_ENDPOINT + f'pedidos/{pedido_id}/', headers=headers)
+    if pedido_request.status_code == 200:
+        pedido = pedido_request.json()
+        print(pedido)
+        if int(pedido['comprador']) != int(user_id):
+            messages.error(request, 'Você não tem permissão para excluir este pedido.')
+            print(f"não tem permissão \n pedido id: {pedido['comprador']} \n user id: {user_id}")
+            return redirect('meus_pedidos')
+        if pedido['status_pedido'] == 'Cancelado':
+            delete_request = requests.delete(API_ENDPOINT + f'pedidos/{pedido_id}/', headers=headers)
+            if delete_request.status_code == 204:
+                messages.success(request, 'Pedido excluído com sucesso.')
+                print("pedido excluido com sucesso")
+            else:
+                messages.error(request, 'Erro ao excluir o pedido.')
+                print("erro ao excluir o pedido")
+        else:
+            messages.error(request, 'Somente pedidos cancelados podem ser excluídos.')
+            print("somente cancelados podem ser excluidos")
+    else:
+        messages.error(request, 'Pedido não encontrado.')
+        print
+    return redirect('meus_pedidos')
+
+def cancelar_pedido(request, pedido_id):
+    access_token = request.session.get('access_token')
+    tipo = get_user_type_from_token(access_token)
+    user_id = get_user_id_from_token(access_token)
+    headers = {'Authorization': f'Bearer {access_token}'}
+    if tipo != 'comprador':
+        return redirect('dashboard_vendedor')
+    pedido_request = requests.get(API_ENDPOINT + f'pedidos/{pedido_id}/', headers=headers)
+    if pedido_request.status_code == 200:
+        pedido = pedido_request.json()
+        print(pedido)
+        if int(pedido['comprador']) != int(user_id):
+            messages.error(request, 'Você não tem permissão para cancelar este pedido.')
+            print(f"não tem permissão \n pedido id: {pedido['comprador']} \n user id: {user_id}")
+            return redirect('meus_pedidos')
+        if pedido['status_pedido'] == 'Em andamento':
+            pedido['status_pedido'] = 'Cancelado'
+            pedido['status_pagamento'] = 'Cancelado'
+            update_request = requests.put(API_ENDPOINT + f'pedidos/{pedido_id}/', data=pedido, headers=headers)
+            if update_request.status_code == 200:
+                messages.success(request, 'Pedido cancelado com sucesso.')
+                print("pedido cancelado com sucesso")
+            else:
+                messages.error(request, 'Erro ao cancelar o pedido.')
+                print("erro ao cancelar o pedido")
+        else:
+            messages.error(request, 'Somente pedidos em andamento podem ser cancelados.')
+            print("somente em andamento podem ser cancelados")
+    else:
+        messages.error(request, 'Pedido não encontrado.')
+        print("pedido nao encontrado")
+    return redirect('meus_pedidos')
 # Views antigas mantidas para compatibilidade
 def login(request):
     return login_view(request)

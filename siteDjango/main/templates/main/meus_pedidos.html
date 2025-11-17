@@ -1,17 +1,31 @@
 {% extends "main/base.html" %}
 
-{% block title %}Meus Pedidos - EcoSertão{% endblock %}
+{% block title %}Meus Pedidos - FoodZip{% endblock %}
 
 {% block content %}
 <div class="dashboard fade-in">
     <div class="dashboard-header">
         <h1>Meus Pedidos</h1>
         <p>Acompanhe o status dos seus pedidos</p>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
     </div>
-    
+
     {% if pedidos %}
+    <!-- 🔹 Botões de filtro -->
+    <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="todos">Todos</button>
+        <button class="filter-btn" data-filter="em aberto">Em aberto</button>
+        <button class="filter-btn" data-filter="preparando">Preparando</button>
+        <button class="filter-btn" data-filter="finalizado">Finalizado</button>
+        <button class="filter-btn" data-filter="cancelado">Cancelado</button>
+    </div>
+
     <div class="table-container">
-        <table class="table">
+        <table class="table" id="tabela-pedidos">
             <thead>
                 <tr>
                     <th>Pedido</th>
@@ -26,18 +40,21 @@
             </thead>
             <tbody>
                 {% for pedido in pedidos %}
-                <tr>
+                <tr data-status="{{ pedido.status_pedido|lower }}">
                     <td>#{{ pedido.id }}</td>
                     <td>{{ pedido.nome_pacote }}</td>
                     <td>{{ pedido.nome_vendedor }}</td>
                     <td>R$ {{ pedido.preco_total|floatformat:2 }}</td>
                     <td><span class="status-badge status-{{ pedido.status_pedido|lower }}">{{ pedido.status_pedido }}</span></td>
                     <td><span class="status-badge status-{{ pedido.status_pagamento|lower }}">{{ pedido.status_pagamento }}</span></td>
-                    <td>{{ pedido.data_compra|date:"d/m/Y H:i" }}</td>
+                    <td>{{ pedido.data_pedido|date:"d/m/Y H:i" }}</td>
                     <td>
                         {% if pedido.status_pedido == 'Finalizado' and not pedido.avaliado %}
                             <a href="#" class="btn-card">Avaliar</a>
                         {% endif %}
+                        <a href="{% url 'excluir_pedido' pedido.id %}" class="btn-card">Excluir</a>
+                        <a href="{% url 'cancelar_pedido' pedido.id %}" class="btn-card">Cancelar</a>
+                        <a href="{{ pedido.init_point }}" class="btn-card">Pagar</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -52,8 +69,60 @@
         </div>
     </div>
     {% endif %}
+
     <div class="form-links">
-            <a href="{% url 'dashboard_comprador' %}">Voltar ao Dashboard</a>
-        </div>
+        <a href="{% url 'dashboard_comprador' %}">Voltar ao Dashboard</a>
+    </div>
+    <div class="warning"><h3>Atenção: O link de pagamento expira em aproximadamente 3 horas.</h3></div>
 </div>
+
+<!-- 🔹 Script JS -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".filter-btn");
+    const rows = document.querySelectorAll("#tabela-pedidos tbody tr");
+
+    buttons.forEach(button => {
+        button.addEventListener("click", () => {
+            const filter = button.getAttribute("data-filter");
+            
+            buttons.forEach(b => b.classList.remove("active"));
+            button.classList.add("active");
+
+            rows.forEach(row => {
+                const status = row.getAttribute("data-status");
+                if (filter === "todos" || status === filter) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.filter-buttons {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: none;
+    background-color: #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.filter-btn.active, .filter-btn:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+</style>
+
 {% endblock content %}

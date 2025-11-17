@@ -64,7 +64,8 @@ class Pedido(models.Model):
         ('Entregue', 'Entregue'),
     ]
     STATUS_PEDIDO_CHOICES = [
-        ('Em andamento', 'Em andamento'),
+        ('Em aberto', 'Em aberto'),
+        ('Preparando','Preparando'),
         ('Finalizado', 'Finalizado'),
         ('Cancelado', 'Cancelado'),
     ]
@@ -74,6 +75,9 @@ class Pedido(models.Model):
     preco_total = models.DecimalField(max_digits=8, decimal_places=2)
     status_pedido = models.CharField(choices=STATUS_PEDIDO_CHOICES, max_length=20, default='Em andamento')
     data_pedido = models.DateTimeField(auto_now_add=True)
+    init_point = models.CharField(max_length=200, blank=True, null=True)  # URL de pagamento
+    aprovado = models.BooleanField(default=False)
+    avaliado = models.BooleanField(default=False)  # Novo campo para indicar se foi aval
 
     def __str__(self):
         return f"Pedido #{self.pk}"

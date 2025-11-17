@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <title>{% block title %}EcoSertão{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+    <title>{% block title %}FoodZip{% endblock %}</title>
 </head>
 <body>
     <header class="header">
         <div class="logo">
             <a href="{% url 'home' %}">
-                <img src="{% static 'assets/logo.png' %}" alt="EcoSertão">
+                <img src="{% static 'assets/assetsJr/logo2.png' %}" alt="FoodZip">
             </a>
         </div>
         <nav>
@@ -31,7 +32,7 @@
                     <li><a href="{% url 'logout' %}">Sair ({{ user.username }})</a></li>
                 {% else %}
                     <li><a href="#sobre">Sobre</a></li>
-                    <li><a href="#contato">Contato</a></li>
+                    <li><a href="#contato">Criar Conta</a></li>
                     <li><a href="{% url 'login' %}" class="btn-login">Login</a></li>
                 {% endif %}
             </ul>
@@ -46,13 +47,13 @@
     {% if not user.is_authenticated %}
     <section id="contato" class="contato">
         <h2>Entre em Contato</h2>
-        <p>Email: contato@ecosertao.com</p>
+        <p>Email: contato@FoodZip.com</p>
         <p>Telefone: (XX) XXXX-XXXX</p>
     </section>
     {% endif %}
 
     <footer class="footer">
-        <p>&copy; {{ now|date:"Y" }} EcoSertão - Todos os direitos reservados.</p>
+        <p>&copy; {{ now|date:"Y" }} FoodZip - Todos os direitos reservados.</p>
     </footer>
 </body>
 </html>
