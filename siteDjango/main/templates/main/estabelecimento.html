@@ -10,7 +10,7 @@
         <img src="{{ vendedor.imagem }}" 
              alt="{{ vendedor.nome_empresa }} foto" 
              class="rounded-circle shadow" width="150" height="150">
-        <h1 class="mt-3">{{ vendedor.nome_empresa }}</h1>
+        <h1 style="margin-left: 2rem;">{{ vendedor.nome_empresa }}</h1>
         <p class="text-muted">{{ vendedor.descricao }}</p>
     </div>
 
@@ -30,13 +30,17 @@
                     <i class="fas fa-ice-cream fa-lg"></i>
                 {% endif %}
             </div>
-            <div class="card-body">
-                <span class="category-badge">{{ pacote.categoria }}</span>
-                <p>{{ pacote.descricao|truncatechars:120 }}</p>
-                <div class="price">R$ {{ pacote.preco }}</div>
-                <p class="text-muted small">Disponíveis: {{ pacote.quant_disponivel }}</p>
-                <a href="#" class="btn-card">Ver mais</a>
-            </div>
+            <form action="{% url 'fazer_pedido' pacote.id %}" method="post">
+                <div class="card-body">
+                    <span class="category-badge">{{ pacote.categoria }}</span>
+                    <p>{{ pacote.descricao|truncatechars:120 }}</p>
+                    <div class="price">R$ {{ pacote.preco }}</div>
+                    <p class="text-muted small">Disponíveis: {{ pacote.quant_disponivel }}</p>
+                    <input type="number" name="quantidade" min="1" max="{{ pacote.quant_disponivel }}" value="1" class="form-number-input">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-card">Comprar Agora</button>
+                </div>
+            </form>
         </div>
         {% empty %}
         <div class="col-12 text-center">

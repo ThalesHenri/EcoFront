@@ -369,7 +369,7 @@ def fazer_pedido(request, pacote_id):
     tipo = get_user_type_from_token(access_token)
     user_id = get_user_id_from_token(access_token)
     headers = {'Authorization': f'Bearer {access_token}'}
-    
+    quantidade = request.POST.get('quantidade')
     if tipo != 'comprador':
         return redirect('dashboard_vendedor')
     
@@ -393,9 +393,11 @@ def fazer_pedido(request, pacote_id):
                 'comprador': comprador['id'],
                 'pacote': pacote['id'],
                 'preco_total': pacote['preco'],
+                'quantidade': quantidade,
                 'status_pagamento': 'Pendente',
                 'status_pedido': 'Em andamento'  # Inicialmente vazio
             }
+            print(data)
             r = requests.post(API_ENDPOINT + 'pedidos/', data=data, headers=headers)
             print(headers)
             if r.status_code != 201:
@@ -533,7 +535,6 @@ def editar_pacote(request, pacote_id):
         if r.status_code == 200:
             messages.success(request, 'Pacote atualizado com sucesso!')
             print("pacotes atualizados com sucesso!")
-            print(imagem.name)
             return redirect('meus_pacotes')
         else:
             messages.error(request, f'Erro ao atualizar o pacote: {r.text}')
