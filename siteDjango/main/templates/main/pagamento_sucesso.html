@@ -1,0 +1,15 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block title %}Pagamento Concluído - EcoSertão{% endblock %}
+
+{% block content %}
+<section class="pagamento-status sucesso">
+    <div class="container">
+        <h1>✅ Pagamento Concluído com Sucesso!</h1>
+        <p>Obrigado pela sua compra, <strong>{{ user.username }}</strong>!</p>
+        <p>O seu pedido foi registrado e está sendo processado. Você pode acompanhar os detalhes na sua <a href="{% url 'meus_pedidos' %}">página de pedidos</a>.</p>
+        <a href="{% url 'dashboard_comprador' %}" class="btn">Voltar para a Início</a>
+    </div>
+</section>
+{% endblock %}

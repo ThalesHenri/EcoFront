@@ -1,0 +1,50 @@
+{% extends "main/base.html" %}
+
+{% block title %}Pacotes Disponíveis - EcoSertão{% endblock %}
+
+{% block content %}
+<div class="dashboard fade-in">
+    <div class="dashboard-header">
+        <h1>Pacotes Disponíveis</h1>
+        <p>Encontre os melhores pacotes com desconto</p>
+    </div>
+    
+    <div class="cards-grid">
+        {% for pacote in pacotes %}
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ pacote.nome_pacote }}</h3>
+                <img src="{{ pacote.imagem }}" alt="imagem" class="img-card">
+
+                <span class="category-badge">{{ pacote.categoria }}</span>
+            </div>
+            <div class="card-body">
+                <p>{{ pacote.descricao }}</p>
+                <div class="price">R$ {{ pacote.preco|floatformat:2 }}</div>
+                <p><strong>Disponível:</strong> {{ pacote.quant_disponivel }} unidades</p>
+                <p><strong>Vendedor:</strong> {{ pacote.nome_vendedor}}</p>
+                
+                {% if pacote.quant_disponivel > 0 %}
+                    <form method="post" action="{% url 'fazer_pedido' pacote.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-card">Comprar Agora</button>
+                    </form>
+                {% else %}
+                    <button class="btn-card" disabled>Esgotado</button>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="card">
+            <div class="card-body">
+                <p>Nenhum pacote disponível no momento.</p>
+            </div>
+        </div>
+        {% endfor %}
+    
+    </div>
+    <div class="form-links">
+        <a href="{% url 'dashboard_comprador' %}">Voltar ao Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

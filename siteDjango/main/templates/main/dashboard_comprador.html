@@ -1,0 +1,119 @@
+{% extends "main/base.html" %}
+
+{% block title %}Dashboard Comprador - EcoSertão{% endblock %}
+
+{% block content %}
+<div class="dashboard fade-in">
+    <div class="dashboard-header">
+        <h1>Bem-vindo, {{ compradorNome }}!</h1>
+        <p>Seu painel de controle como comprador</p>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>{{ total_pedidos }}</h3>
+            <p>Pedidos Realizados</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ pedidos_pendentes }}</h3>
+            <p>Pedidos Pendentes</p>
+        </div>
+        <div class="stat-card">
+            <h3>R$ {{ total_gasto|floatformat:2 }}</h3>
+            <p>Total Gasto</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ avaliacoes_feitas }}</h3>
+            <p>Avaliações Feitas</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+
+        <div class="dashboard-header">
+            <h2 class="mb-3">Estabelecimentos Cadastrados</h2>
+        </div>
+    <div class="estabelecimentos-container">
+    {% for estabelecimento in estabelecimentos %}
+    <div class="estabelecimento-card">
+        <img src="{{ estabelecimento.imagem_url|default:'https://www.infomoney.com.br/wp-content/uploads/2019/06/loja-natura-sede-sp.jpg?fit=900%2C600&quality=50&strip=all' }}" 
+             class="estabelecimento-img" alt="{{ estabelecimento.nome_empresa }}">
+        <div class="estabelecimento-body">
+            <h5 class="estabelecimento-titulo">{{ estabelecimento.nome_empresa }}</h5>
+            <p class="estabelecimento-texto">
+                {{ estabelecimento.representante }}
+                {{ estabelecimento.id}}
+            </p>
+            <a href="/estabelecimento/{{ estabelecimento.id }}/" class="btn btn-primary btn-sm">
+                Ver Produtos
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+</div>
+    
+    <div class="cards-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>🛒 Fazer Pedido</h3>
+            </div>
+            <div class="card-body">
+                <p>Explore os pacotes disponíveis e faça seus pedidos</p>
+                <a href="{% url 'pacotes_list' %}" class="btn-card">Ver Pacotes</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>📋 Meus Pedidos</h3>
+            </div>
+            <div class="card-body">
+                <p>Acompanhe o status dos seus pedidos</p>
+                <a href="{% url 'meus_pedidos' %}" class="btn-card">Ver Pedidos</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>⭐ Avaliações</h3>
+            </div>
+            <div class="card-body">
+                <p>Avalie os vendedores e veja suas avaliações</p>
+                <a href="#" class="btn-card">Ver Avaliações</a>
+            </div>
+        </div>
+    </div>
+    
+    {% if pedidos_recentes %}
+    <div class="table-container">
+        <h3 style="padding: 1rem; background: var(--cor-primaria); color: white; margin: 0;">Pedidos Recentes</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Pedido</th>
+                    <th>Pacote</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos_recentes %}
+                <tr>
+                    <td>#{{ pedido.id }}</td>
+                    <td>{{ pedido.nome_pacote }}</td>
+                    <td>R$ {{ pedido.preco_total|floatformat:2 }}</td>
+                    <td><span class="status-badge status-{{ pedido.status_pedido|lower }}">{{ pedido.status_pedido }}</span></td>
+                    <td>{{ pedido.data_compra }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    <a href="{% url 'logout' %}"><div class="btn-submit">Sair</div></a>
+</div>
+{% endblock content %}

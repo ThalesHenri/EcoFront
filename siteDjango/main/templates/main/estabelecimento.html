@@ -1,0 +1,57 @@
+{% extends "main/base.html" %}
+
+{% block title %}{{ vendedor.nome_empresa }}{% endblock title %}
+
+{% block content %}
+<div class="container my-5">
+
+    <!-- Cabeçalho do Vendedor -->
+    <div class="text-center mb-5 fade-in">
+        <img src="{{ vendedor.imagem }}" 
+             alt="{{ vendedor.nome_empresa }} foto" 
+             class="rounded-circle shadow" width="150" height="150">
+        <h1 style="margin-left: 2rem;">{{ vendedor.nome_empresa }}</h1>
+        <p class="text-muted">{{ vendedor.descricao }}</p>
+    </div>
+
+    <!-- Pacotes Disponíveis -->
+    <div class="cards-grid">
+        {% for pacote in pacotes %}
+        <div class="card fade-in">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3>{{ pacote.nome_pacote }}</h3>
+                <img src="{{ pacote.imagem }}" alt="imagem" class="img-card">
+                <!-- Ícone de acordo com a categoria -->
+                {% if pacote.categoria == 'Salgada' %}
+                    <i class="fas fa-pizza-slice fa-lg"></i>
+                {% elif pacote.categoria == 'Mista' %}
+                    <i class="fas fa-utensils fa-lg"></i>
+                {% elif pacote.categoria == 'Doce' %}
+                    <i class="fas fa-ice-cream fa-lg"></i>
+                {% endif %}
+            </div>
+            <form action="{% url 'fazer_pedido' pacote.id %}" method="post">
+                <div class="card-body">
+                    <span class="category-badge">{{ pacote.categoria }}</span>
+                    <p>{{ pacote.descricao|truncatechars:120 }}</p>
+                    <div class="price">R$ {{ pacote.preco }}</div>
+                    <p class="text-muted small">Disponíveis: {{ pacote.quant_disponivel }}</p>
+                    <input type="number" name="quantidade" min="1" max="{{ pacote.quant_disponivel }}" value="1" class="form-number-input">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-card">Comprar Agora</button>
+                </div>
+            </form>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <p class="text-muted">Nenhum pacote disponível no momento.</p>
+        </div>
+        {% endfor %}
+
+</div>
+<div class="btn-container" style="text-align: center; margin-top:100px; margin-bottom: 50px;">
+    <a href="/dashboard/comprador/" class="btn-submit" style="margin-top: 4rem;">Voltar para Dashboard</a>
+</div>
+<!-- Importar Font Awesome para ícones -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock content %}

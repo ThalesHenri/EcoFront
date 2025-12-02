@@ -1,0 +1,76 @@
+{% extends "main/base.html" %}
+
+{% block title %}Detalhes do Pedido #{{ pedido.id }} - EcoSertão{% endblock %}
+
+{% block content %}
+<div class="dashboard fade-in">
+
+    <div class="dashboard-header">
+        <h1>Detalhes do Pedido #{{ pedido.id }}</h1>
+        <p>Informações completas sobre o pedido selecionado</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+
+            <h2>📦 Pacote</h2>
+            <p><strong>Nome:</strong> {{ pedido.nome_pacote }}</p>
+            <p><strong>Valor Total:</strong> R$ {{ pedido.preco_total|floatformat:2 }}</p>
+
+            <hr>
+
+            <h2>👤 Comprador</h2>
+            <p><strong>Nome:</strong> {{ pedido.nome_comprador }}</p>
+            <p><strong>Email:</strong> {{ pedido.email_comprador }}</p>
+            <p><strong>Telefone:</strong> {{ pedido.telefone_comprador }}</p>
+            <hr>
+
+            <h2>📅 Informações do Pedido</h2>
+            <p><strong>Status do Pedido:</strong> 
+                <span class="status-badge status-{{ pedido.status_pedido|lower }}">
+                    {{ pedido.status_pedido }}
+                </span>
+            </p>
+
+            <p><strong>Status do Pagamento:</strong> 
+                <span class="status-badge status-{{ pedido.status_pagamento|lower }}">
+                    {{ pedido.status_pagamento }}
+                </span>
+            </p>
+
+            <p><strong>Data do Pedido:</strong> {{ pedido.data_compra}}</p>
+
+            {% if pedido.init_point %}
+            <p><strong>Link de Pagamento:</strong> 
+                <a href="{{ pedido.init_point }}" target="_blank">
+                    Acessar pagamento
+                </a>
+            </p>
+            {% endif %}
+
+            <hr>
+
+            <div class="actions">
+                <a href="{% url 'pedidos_recebidos' %}" class="btn-card">Voltar</a>
+
+        
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+.card {
+    margin-top: 20px;
+}
+
+.actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+</style>
+
+{% endblock %}

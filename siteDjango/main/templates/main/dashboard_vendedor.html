@@ -1,0 +1,94 @@
+{% extends "main/base.html" %}
+
+{% block title %}Dashboard Vendedor - EcoSertão{% endblock %}
+
+{% block content %}
+<div class="dashboard fade-in">
+    <div class="dashboard-header">
+        <h1>{{ vendedor.nome_empresa }}</h1>
+        <p>Painel de controle do vendedor - {{ vendedor.representante }}</p>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>{{ total_pacotes }}</h3>
+            <p>Pacotes Cadastrados</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ pedidos_recebidos }}</h3>
+            <p>Pedidos Recebidos</p>
+        </div>
+        <div class="stat-card">
+            <h3>R$ {{ total_vendas|floatformat:2 }}</h3>
+            <p>Total em Vendas</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ media_avaliacoes|floatformat:1 }}/10</h3>
+            <p>Avaliação Média</p>
+        </div>
+    </div>
+    
+    <div class="cards-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3>📦 Cadastrar Pacote</h3>
+            </div>
+            <div class="card-body">
+                <p>Adicione novos pacotes ao seu catálogo</p>
+                <a href="{% url 'cadastrar_pacote' %}" class="btn-card">Cadastrar Pacote</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>📋 Meus Pacotes</h3>
+            </div>
+            <div class="card-body">
+                <p>Gerencie seus pacotes cadastrados</p>
+                <a href="{% url 'meus_pacotes' %}" class="btn-card">Ver Pacotes</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>🛍️ Pedidos Recebidos</h3>
+            </div>
+            <div class="card-body">
+                <p>Gerencie os pedidos dos seus clientes</p>
+                <a href="{% url 'pedidos_recebidos' %}" class="btn-card">Ver Pedidos</a>
+            </div>
+        </div>
+    </div>
+    
+    {% if pedidos_recentes %}
+    <div class="table-container">
+        <h3 style="padding: 1rem; background: #2e7d32; color: white; margin: 0;">Pedidos Recentes</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Pedido</th>
+                    <th>Cliente</th>
+                    <th>Pacote</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos_recentes %}
+                <tr>
+                    <td>#{{ pedido.id }}</td>
+                    <td>{{ pedido.comprador.nome }}</td>
+                    <td>{{ pedido.pacote.nome_pacote }}</td>
+                    <td>R$ {{ pedido.preco_total|floatformat:2 }}</td>
+                    <td><span class="status-badge status-{{ pedido.status_pedido|lower }}">{{ pedido.status_pedido }}</span></td>
+                    <td>{{ pedido.data_pedido|date:"d/m/Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    <a href="{% url 'logout' %}"><div class="btn-submit">Sair</div></a>
+</div>
+{% endblock content %}

@@ -1,0 +1,17 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block title %}Pagamento Pendente - EcoSertão{% endblock %}
+
+{% block content %}
+<section class="pagamento-status pendente">
+    <div class="container">
+        <div class="loader"></div>
+        <h1>⏳ Pagamento Pendente</h1>
+        <p>O seu pagamento ainda está sendo processado pelo sistema.</p>
+        <p>Isso pode levar alguns minutos dependendo do método escolhido (boleto, Pix ou cartão de crédito).</p>
+        <p>Você poderá acompanhar a atualização do status na sua <a href="{% url 'meus_pedidos' %}">página de pedidos</a>.</p>
+        <a href="{% url 'home' %}" class="btn">Voltar ao Início</a>
+    </div>
+</section>
+{% endblock %}
