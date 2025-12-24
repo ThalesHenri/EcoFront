@@ -66,6 +66,7 @@ def login_view(request):
         messages.error(request, 'Resposta inválida da API.')
         return render(request, 'main/login.html')
 
+    request.session.flush()  # Limpa sessão anterior
     access_token = tokens.get('access')
     refresh_token = tokens.get('refresh')
 
@@ -123,50 +124,81 @@ def login_view(request):
 
 def logout_view(request):
     auth_logout(request)
+    request.session.flush()
     return redirect('home')
 
-
 def register_comprador(request):
-    if request.method == 'POST':
-        nome = request.POST['nome']
-        username = request.POST['username']
-        email = request.POST['email']
-        telefone = request.POST['telefone']
-        password = request.POST['password']
-        confirm_password = request.POST['confirm_password']
-        
-        if password != confirm_password:
-            messages.error(request, 'As senhas não coincidem.')
-            return render(request, 'main/register_comprador.html')
-        
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'Este email já está cadastrado.')
-            return render(request, 'main/register_comprador.html')
-        
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Este nome de usuário já está em uso.')
-            return render(request, 'main/register_comprador.html')
-        data = {
-                'nome': nome,
-                'telefone': telefone,
-                'username': username,
-                'email': email,
-                'password': password,
-                'tipo': 'Comprador'
-            }
-        try:
-            # Criar usuário
-            r = requests.post(API_ENDPOINT + 'registerComprador/', data=data)
-            if r.status_code != 201:
-                messages.error(request, f'Erro ao criar conta: {r.text}')
-                return render(request, 'main/register_comprador.html')
-            elif r.status_code == 201:
-                messages.success(request, 'Cadastro realizado com sucesso!')
-                return redirect('login')   
-            
-        except Exception as e:
-            messages.error(request, 'Erro ao criar conta. Tente novamente.')
-    
+    if request.method != 'POST':
+        return render(request, 'main/register_comprador.html')
+
+    nome = request.POST.get('nome')
+    username = request.POST.get('username')
+    email = request.POST.get('email')
+    telefone = request.POST.get('telefone')
+    password = request.POST.get('password')
+    confirm_password = request.POST.get('confirm_password')
+
+    if password != confirm_password:
+        messages.error(request, 'As senhas não coincidem.')
+        return render(request, 'main/register_comprador.html')
+
+    if User.objects.filter(email=email).exists():
+        messages.error(request, 'Este email já está cadastrado.')
+        return render(request, 'main/register_comprador.html')
+
+    if User.objects.filter(username=username).exists():
+        messages.error(request, 'Este nome de usuário já está em uso.')
+        return render(request, 'main/register_comprador.html')
+
+    data = {
+        'nome': nome,
+        'telefone': telefone,
+        'username': username,
+        'email': email,
+        'password': password,
+        'tipo': 'Comprador'
+    }
+
+    try:
+        r = requests.post(
+            API_ENDPOINT + 'registerComprador/',
+            data=data,
+            timeout=10
+        )
+
+    except requests.exceptions.ConnectionError:
+        messages.error(request, 'Não foi possível conectar à API.')
+        return render(request, 'main/register_comprador.html')
+
+    except requests.exceptions.Timeout:
+        messages.error(request, 'A API demorou para responder.')
+        return render(request, 'main/register_comprador.html')
+
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f'Erro inesperado na comunicação com a API: {e}')
+        return render(request, 'main/register_comprador.html')
+
+    # --- Resposta da API ---
+    if r.status_code == 201:
+        messages.success(request, 'Cadastro realizado com sucesso!')
+        return redirect('login')
+
+    if r.status_code == 400:
+        messages.error(request, 'Dados inválidos. Verifique os campos.')
+        return render(request, 'main/register_comprador.html')
+
+    if r.status_code == 500:
+        messages.error(
+            request,
+            'Erro interno no servidor. Contate o administrador.'
+        )
+        return render(request, 'main/register_comprador.html')
+
+    # 🔴 fallback explícito
+    messages.error(
+        request,
+        f'Erro ao criar conta ({r.status_code}): {r.text}'
+    )
     return render(request, 'main/register_comprador.html')
 
 def register_vendedor(request):
