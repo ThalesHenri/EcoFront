@@ -41,73 +41,80 @@ def get_user_type_from_token(token):
         return None
     
 def login_view(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+    if request.method != 'POST':
+        return render(request, 'main/login.html')
 
-        url = API_ENDPOINT + 'token/'
-        data = {'email': email, 'password': password}
+    email = request.POST.get('email')
+    password = request.POST.get('password')
 
-        try:
-            r = requests.post(url=url, data=data)
-        except requests.exceptions.RequestException as e:
-            messages.error(request, f"Erro de conexão com a API: {e}")
-            return render(request, 'main/login.html')
+    url = API_ENDPOINT + 'token/'
+    data = {'email': email, 'password': password}
 
-        if r.status_code == 200:
-            try:
-                tokens = r.json() # salva a resposta JSON
-            except ValueError:
-                messages.error(request, 'Resposta da API não é um JSON válido.')
-                return render(request, 'main/login.html')
+    try:
+        r = requests.post(url=url, data=data)
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Erro de conexão com a API: {e}")
+        return render(request, 'main/login.html')
 
-            # Extrai os tokens
-            access_token = tokens.get('access')
-            refresh_token = tokens.get('refresh')
+    if r.status_code != 200:
+        messages.error(request, 'E-mail ou senha inválidos.')
+        return render(request, 'main/login.html')
 
-            if access_token:
-                 # Descobre o tipo do usuário pelo token
-                user_tipo = get_user_type_from_token(access_token)
-                
-                # Salva os tokens na sessão
-                request.session['access_token'] = access_token
-                request.session['refresh_token'] = refresh_token
-                request.session.set_expiry(3600)  # expira em 1 hora
-                request.session['user_tipo'] = user_tipo
-               
-                
-                # Verifica o tipo de usuário
-                if user_tipo == 'comprador':
-                    user_id = get_user_id_from_token(access_token)
-                    headers = {'Authorization': f'Bearer {access_token}'}
-                    comprador_request = requests.get(API_ENDPOINT + f'compradores/?user={user_id}/', headers=headers)
-                    if comprador_request.status_code == 200:
-                        messages.success(request, 'Login realizado com sucesso!')
-                        return redirect('dashboard_comprador')
-                    
-                    messages.error(request, 'Usuário não encontrado ou tipo inválido.')
-                    return render(request, 'main/login.html')
-                
-                elif user_tipo == 'vendedor':
-                    user_id = get_user_id_from_token(access_token)
-                    print(user_id)
-                    headers = {'Authorization': f'Bearer {access_token}'}
-                    vendedor_request = requests.get(API_ENDPOINT + f'vendedores/?user={user_id}/', headers=headers)
-                    if vendedor_request.status_code == 200:
-                        messages.success(request, 'Login realizado com sucesso!')
-                        return redirect('dashboard_vendedor')
-                
-                messages.error(request, 'Usuário não encontrado ou tipo inválido.')
-                return render(request, 'main/login.html')
-                
-                
-            else:
-                messages.error(request, 'Token JWT não encontrado na resposta.')
-                return render(request, 'main/login.html')
-        else:
-            messages.error(request, f'Erro ao fazer login: {r.text}')
-            return render(request, 'main/login.html')
+    try:
+        tokens = r.json()
+    except ValueError:
+        messages.error(request, 'Resposta inválida da API.')
+        return render(request, 'main/login.html')
 
+    access_token = tokens.get('access')
+    refresh_token = tokens.get('refresh')
+
+    if not access_token:
+        messages.error(request, 'Token de autenticação não encontrado.')
+        return render(request, 'main/login.html')
+
+    # Salva tokens na sessão
+    request.session['access_token'] = access_token
+    request.session['refresh_token'] = refresh_token
+    request.session.set_expiry(3600)
+
+    # Descobre tipo e id do usuário
+    user_tipo = get_user_type_from_token(access_token)
+    user_id = get_user_id_from_token(access_token)
+
+    if not user_tipo or not user_id:
+        messages.error(request, 'Token inválido ou corrompido.')
+        return render(request, 'main/login.html')
+
+    headers = {'Authorization': f'Bearer {access_token}'}
+
+    if user_tipo == 'comprador':
+        response = requests.get(
+            API_ENDPOINT + f'compradores/?user={user_id}/',
+            headers=headers
+        )
+
+        if response.status_code == 200:
+            messages.success(request, 'Login realizado com sucesso!')
+            return redirect('dashboard_comprador')
+
+        messages.error(request, 'Perfil de comprador não encontrado.')
+        return render(request, 'main/login.html')
+
+    if user_tipo == 'vendedor':
+        response = requests.get(
+            API_ENDPOINT + f'vendedores/?user={user_id}/',
+            headers=headers
+        )
+
+        if response.status_code == 200:
+            messages.success(request, 'Login realizado com sucesso!')
+            return redirect('dashboard_vendedor')
+
+        messages.error(request, 'Perfil de vendedor não encontrado.')
+        return render(request, 'main/login.html')
+
+    messages.error(request, 'Tipo de usuário não reconhecido pelo sistema.')
     return render(request, 'main/login.html')
 
         
